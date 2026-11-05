@@ -1,0 +1,38 @@
+{
+  "name": "inspire-daily",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "tsx server.ts",
+    "build": "vite build",
+    "start": "tsx server.ts",
+    "lint": "tsc --noEmit",
+    "test": "tsx --test shared/*.test.ts server/*.test.ts",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@google-cloud/firestore": "^9.3.1",
+    "@google-cloud/storage": "^7.22.0",
+    "@google/genai": "^1.25.0",
+    "dotenv": "^18.0.7",
+    "express": "^5.3.0",
+    "google-auth-library": "^11.2.0",
+    "html-to-image": "^1.11.13",
+    "qrcode": "^1.5.4",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "tsx": "^4.23.15"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.6",
+    "@types/node": "^22.14.0",
+    "@types/qrcode": "^1.5.5",
+    "@vitejs/plugin-react": "^5.0.0",
+    "autoprefixer": "^10.6.1",
+    "postcss": "^8.5.29",
+    "tailwindcss": "^3.4.19",
+    "typescript": "~5.8.2",
+    "vite": "^6.2.0"
+  }
+}
