@@ -1,4 +1,4 @@
-# Inspire Engine: one container that serves the built app and the server.
+# Inspire Daily: one container that serves the built app and the server.
 FROM node:22-slim
 
 WORKDIR /app
