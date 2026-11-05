@@ -3,6 +3,7 @@
 import type { Post, Persona, UserBrandSettings } from '../types';
 import type { TimelessQuote } from '../data/quotesDatabase';
 import type { LibraryPiece, PieceStatus } from './library';
+import type { DayDoc } from '../shared/daily';
 import { checkRedeem, type AccountDoc, type InviteDoc, type Membership, type RedeemResult, type WaitlistDoc } from './accounts';
 
 export interface UserDoc {
@@ -38,6 +39,11 @@ export interface Store {
   putPiece(piece: LibraryPiece): Promise<void>;
   /** Adds pieces whose ids aren't there yet; returns how many were added. */
   seedLibrary(pieces: LibraryPiece[]): Promise<number>;
+  getDay(day: string): Promise<DayDoc | null>;
+  /** Saves the day unless it exists; returns what's stored (the first one wins, so two visitors see the same three). */
+  createDay(doc: DayDoc): Promise<DayDoc>;
+  /** Saved days, newest first, before `before` (exclusive) when given. */
+  listDays(limit: number, before?: string): Promise<DayDoc[]>;
   getAccount(sub: string): Promise<AccountDoc | null>;
   /** Creates the link unless one exists; returns the link that's stored (the existing one wins). */
   linkAccount(account: AccountDoc): Promise<AccountDoc>;
@@ -70,6 +76,7 @@ export class MemoryStore implements Store {
   private quotes: TimelessQuote[] = [];
   private usage = new Map<string, number>();
   private library = new Map<string, LibraryPiece>();
+  private days = new Map<string, DayDoc>();
   private accounts = new Map<string, AccountDoc>();
   private invites = new Map<string, InviteDoc>();
   private waitlist = new Map<string, WaitlistDoc>();
@@ -131,6 +138,21 @@ export class MemoryStore implements Store {
     const fresh = pieces.filter((p) => !this.library.has(p.id));
     fresh.forEach((p) => this.library.set(p.id, structuredClone(p)));
     return fresh.length;
+  }
+  async getDay(day: string) {
+    const d = this.days.get(day);
+    return d ? structuredClone(d) : null;
+  }
+  async createDay(doc: DayDoc) {
+    if (!this.days.has(doc.day)) this.days.set(doc.day, structuredClone(doc));
+    return structuredClone(this.days.get(doc.day)!);
+  }
+  async listDays(limit: number, before?: string) {
+    return [...this.days.values()]
+      .filter((d) => !before || d.day < before)
+      .sort((a, b) => b.day.localeCompare(a.day))
+      .slice(0, limit)
+      .map((d) => structuredClone(d));
   }
   async getAccount(sub: string) {
     const a = this.accounts.get(sub);
@@ -288,6 +310,27 @@ export async function createFirestoreStore(): Promise<Store> {
         await batch.commit();
       }
       return fresh.length;
+    },
+    async getDay(day) {
+      const snap = await db.collection('days').doc(day).get();
+      return snap.exists ? (snap.data() as DayDoc) : null;
+    },
+    async createDay(doc) {
+      const ref = db.collection('days').doc(doc.day);
+      try {
+        await ref.create(doc);
+        return doc;
+      } catch (err: any) {
+        // ALREADY_EXISTS: someone else saved today first; theirs stands.
+        if (err?.code !== 6) throw err;
+        return (await ref.get()).data() as DayDoc;
+      }
+    },
+    async listDays(limit, before) {
+      let q = db.collection('days').orderBy('day', 'desc');
+      if (before) q = q.where('day', '<', before);
+      const snap = await q.limit(limit).get();
+      return snap.docs.map((d) => d.data() as DayDoc);
     },
     async getAccount(sub) {
       const snap = await db.collection('accounts').doc(sub).get();

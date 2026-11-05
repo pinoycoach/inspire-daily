@@ -74,11 +74,11 @@ export const InviteGate: React.FC<Props> = ({ googleClientId, status, onMember, 
             </span>
             <h1 className="text-3xl font-black bg-gradient-to-r from-indigo-400 to-pink-400 bg-clip-text text-transparent">Inspire Daily</h1>
           </div>
-          <p className="text-lg text-white font-semibold">Posts for your page. You pick, you post.</p>
+          <p className="text-lg text-white font-semibold">Three checked quotes a day. Free.</p>
           <ul className="text-sm text-gray-300 space-y-1 text-left inline-block">
-            <li>📷 Upload a photo of your product. Get ready-to-post captions in five angles.</li>
-            <li>📜 Quotes with real, checked credits, ready to put on a picture.</li>
-            <li>✋ Nothing posts by itself. You choose, and you post it.</li>
+            <li>📜 Every quote and credit checked by a person before it appears.</li>
+            <li>🖼️ Each one ready as a picture: save it, copy the caption, share it.</li>
+            <li>📚 A new three every day, and every past day kept.</li>
           </ul>
         </div>
 
@@ -96,7 +96,7 @@ export const InviteGate: React.FC<Props> = ({ googleClientId, status, onMember, 
             ) : (
               <p className="text-sm text-amber-300">Google sign-in isn't set up on this server yet.</p>
             )}
-            <p className="text-xs text-gray-500">So your posts follow you to every device.</p>
+            <p className="text-xs text-gray-500">So your invites follow you to every device.</p>
           </div>
 
           <form onSubmit={redeem} className="space-y-2">

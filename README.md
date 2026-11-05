@@ -1,22 +1,23 @@
 # Inspire Daily
 
-A slim copy of Inspire Engine, kept to what a page owner needs to post: upload a photo of your product (or
-make an image), get 5 ready-to-post captions (inspirational, question, informative, humorous, call to action)
-for Instagram, Facebook, X, LinkedIn, TikTok or Threads, save the image with the text on it, and post it
-yourself. **Nothing posts by itself.** There is also a quote vault with credits checked by a person.
+**Three checked quotes a day, free.** Every day the app shows three quote cards, picked only from quotes a
+person approved on the curator desk (`/#curate`), drawn as pictures in the visitor's own browser in three house
+styles (Paper, Storm, Bold). Visitors save the picture and copy the caption. Every past day is kept, so the
+collection grows as you approve more quotes. **Visitors trigger no AI calls,** so running cost is close to zero.
 
-Removed from Inspire Engine on purpose: the journal and "How are you today?", streaks, sparks and XP, WOOP
-worksheets, series and paywall screens, the monetize screen, the KGL studio, video and auto-posting.
+How the three are picked: newly approved quotes first, in the order you approved them; once all have been shown,
+the least recently shown come back. The first visitor of the day freezes that day's three (so everyone sees the
+same cards and the archive never changes). With fewer than 3 approved quotes, the page shows what there is and
+waits. **Approve at least 3 new quotes a day to never repeat.** The day turns over at midnight in
+`DAILY_TIMEZONE` (default Asia/Manila).
 
-**What comes next** (not built yet, one at a time): each store's product facts and a check that captions
-only state those facts, a selling calendar for "why today", three options waiting every morning, a morning
-email with the link, and payments. See the Daily Three plan in `pinoycoach/diskarte-daily`
-(`ideas/seller-posts-concept.md`).
+Removed from Inspire Engine on purpose: AI image and caption creation, photo upload, saved posts, personas, the
+journal and reflections, streaks and XP, worksheets, series, monetize, the KGL studio, video and auto-posting.
 
 **How it's built:**
-- A small server (`server.ts`) makes every AI and database call, so **no key ever reaches the browser**.
-- AI runs on **Vertex AI** (Gemini), which bills your Google Cloud project, or on a Gemini API key.
-- Posts, settings, personas and quotes live in **Firestore**; post pictures live in **Cloud Storage**.
+- A small server (`server.ts`) serves the app and the day's quotes; no key ever reaches the browser.
+- The only AI use is on the curator desk: labels and indexing when you process quotes (Gemini on Vertex, cents).
+- Quotes, days, invites and accounts live in **Firestore**.
 - Visitors get an **anonymous ID** signed by the server. Google sign-in and invite codes are optional.
 - Hosted on **Cloud Run**.
 
@@ -101,8 +102,9 @@ gcloud run deploy inspire-daily \
 If you made the curator code, add `,ADMIN_CODE=inspire-daily-curator-code:latest` to `--set-secrets`.
 
 Say **Y** if it asks to create a repository. It ends with a web address like
-`https://inspire-daily-xxxxx.asia-southeast1.run.app`. Open it, enter the passcode, tap **Create**, upload a
-product photo and make a post.
+`https://inspire-daily-xxxxx.asia-southeast1.run.app`. **The curator code is needed now:** open the address with
+`/#curate` on the end, approve at least 3 quotes (tick "I checked the source" for named authors), then open the
+main page: today's three appear.
 
 **Publishing changes later:** `cd ~/inspire-daily && git pull`, then the same deploy command. If you closed
 Cloud Shell, set `PROJECT=…` and `BUCKET=${PROJECT}-inspire-daily` again first.
@@ -121,12 +123,10 @@ in `/#curate` → **Beta**, where you also see members and the waitlist.
 
 ## Costs and protection
 
-- **Captions and images** cost cents on Vertex; Firestore stays inside its free daily allowance at this size.
-- **Rate limits per visitor:** 40 AI requests and 400 requests in total per 10 minutes.
-- **Daily limits per visitor:** 20 AI images and 60 caption sets. **For everyone together:** 500 AI images.
-- **`--max-instances 2`** keeps the bill predictable. Keep a **budget alert** (Billing → Budgets & alerts).
-- Before opening it to the public: remove the passcode from `--set-secrets` (keep `SESSION_SECRET`), keep the
-  limits, and read the **Privacy & Terms** page (footer link). Visitors can delete all their data there.
+- **Visitors cost almost nothing:** the cards are drawn in their browser, and the server only reads the database.
+- **The curator desk** uses Gemini for labels and indexing when you press "Label & index now" (cents).
+- Rate limit: 400 requests per visitor per 10 minutes. `--max-instances 2` keeps the bill predictable.
+- Before opening it to the public: remove the passcode from `--set-secrets` (keep `SESSION_SECRET`).
 
 ## Running it on your own computer (optional)
 
@@ -134,7 +134,7 @@ in `/#curate` → **Beta**, where you also see members and the waitlist.
 cp .env.example .env.local   # fill in Vertex settings, or GEMINI_API_KEY
 npm install
 npm run dev                  # http://localhost:3000
-npm test                     # session, store, invite and library rules
+npm test                     # daily picking, session, store, invite and library rules
 ```
 
 `.env.example` sets `DATA_STORE=memory`, so it runs without a database (nothing survives a restart).
@@ -146,22 +146,18 @@ npm test                     # session, store, invite and library rules
 | `GOOGLE_GENAI_USE_VERTEXAI` | `true` to use Vertex AI and the project's billing |
 | `GOOGLE_CLOUD_PROJECT` | Project ID that pays (Vertex mode) and holds the database |
 | `FIRESTORE_DATABASE` | Named Firestore database. Use `inspire-daily` so data never mixes with Inspire Engine |
-| `GCS_BUCKET` | Bucket for post pictures |
 | `GOOGLE_CLOUD_LOCATION` | Vertex location. Default `global` |
 | `GEMINI_API_KEY` | Use a Gemini API key instead of Vertex |
 | `DATA_STORE` | `memory` keeps everything in memory instead of Firestore (local runs and tests) |
 | `SESSION_SECRET` | Signs visitors' anonymous IDs. Must stay the same, or everyone starts fresh |
 | `APP_PASSCODE` | Locks the app behind a passcode |
-| `RATE_LIMIT_PER_10MIN` | AI requests per visitor per 10 minutes. Default 40 |
 | `GENERAL_RATE_LIMIT_PER_10MIN` | All requests per visitor per 10 minutes. Default 400 |
-| `IMAGE_DAILY_LIMIT` | AI images per visitor per day. Default 20 |
-| `CAPTION_DAILY_LIMIT` | Caption sets per visitor per day. Default 60 |
-| `GLOBAL_IMAGE_DAILY_LIMIT` | AI images per day for everyone. Default 500 |
 | `JEV_API_KEY` | TypeSafe key for JEV, which labels quotes and flags possible misattributions |
 | `ADMIN_CODE` | Curator code for `/#curate`. Without it, curating is off |
 | `INVITE_ONLY` | `true` turns on Google sign-in + invite codes instead of the passcode |
 | `GOOGLE_CLIENT_ID` | The OAuth Web client ID for "Sign in with Google" (public) |
 | `ADMIN_EMAILS` | Comma-separated Google emails that are always members (you) |
 | `JEV_MODEL`, `JEV_BASE_URL` | Override JEV's model (default `jev-latest`) or address |
-| `MODEL_TEXT`, `MODEL_TEXT_FALLBACK`, `MODEL_IMAGE`, `MODEL_EMBED` | Override model names |
+| `MODEL_EMBED` | Override the embedding model name |
+| `DAILY_TIMEZONE` | Whose midnight starts a new day's three. Default `Asia/Manila` |
 | `PORT` | Port to listen on. Default 3000, or 8080 in the container |

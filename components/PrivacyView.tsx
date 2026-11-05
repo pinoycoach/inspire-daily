@@ -32,38 +32,34 @@ export const PrivacyView: React.FC<PrivacyViewProps> = ({ onBack, onDeleteMyData
       <section className="space-y-2">
         <h2 className="text-lg font-semibold text-white">What we keep</h2>
         <p>
-          Your browser gets a random, anonymous ID so the app can remember your posts and settings. If you sign in with Google, we
+          Your browser gets a random, anonymous ID so the app can recognise your browser. If you sign in with Google, we
           keep your name and email address (nothing else from your Google account) to recognise you on every device and,
           during the invite-only beta, to know who invited whom. With that ID we store:
         </p>
         <ul className="list-disc pl-5 space-y-1">
-          <li>your brand settings;</li>
-          <li>posts you publish, including their images;</li>
-          <li>custom personas you create;</li>
           <li>your invite codes and whether they've been used.</li>
         </ul>
         <p>
           If you join the waitlist, we keep that email address only to send you an invite.
         </p>
         <p>
-          Your prompts and images are sent to Google's Gemini models to create the pictures and captions. We use daily
-          usage counts to keep the free service fair. We don't sell your data or show ads.
+          The pictures are drawn in your own browser; nothing you do here is sent to an AI. We don't sell your data or
+          show ads.
         </p>
       </section>
 
       <section className="space-y-2">
-        <h2 className="text-lg font-semibold text-white">AI-generated content</h2>
+        <h2 className="text-lg font-semibold text-white">The quotes</h2>
         <p>
-          Images and captions are made by AI and can be wrong, odd or unoriginal. Quotes are attributed to their
-          authors with a modern reading; check them before you rely on them. Review everything before you post it, and
-          don't use Inspire Daily to create content that is harmful, misleading or that infringes someone else's rights.
+          A person checks each quote and who said it before it appears, using the source where we have one. We can still
+          get one wrong: if you spot a mistake, tell us and we'll fix it. The pictures are free to save and share.
         </p>
       </section>
 
       <section className="space-y-2">
         <h2 className="text-lg font-semibold text-white">Fair use</h2>
         <p>
-          Inspire Daily is free during this preview, with daily limits on images and posts. Features may change. The service
+          Inspire Daily is free during this preview. Features may change. The service
           is provided as is.
         </p>
       </section>
@@ -71,7 +67,7 @@ export const PrivacyView: React.FC<PrivacyViewProps> = ({ onBack, onDeleteMyData
       <section className="space-y-3 p-4 rounded-xl bg-gray-800 border border-gray-700">
         <h2 className="text-lg font-semibold text-white">Delete my data</h2>
         <p>
-          This permanently deletes your settings, saved posts, their images and your personas from our
+          This permanently deletes everything we keep for you from our
           servers, and unlinks your Google account. You'll start fresh. During the invite-only beta you'd need a new
           invite to come back.
         </p>

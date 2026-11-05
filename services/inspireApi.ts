@@ -1,4 +1,4 @@
-// The app's own data: settings, saved posts, quotes and personas (stored by the server).
+// Account, invites and the curator desk (stored by the server).
 import { apiFetch, setSession } from './apiFetch';
 import type { Post, Persona, UserBrandSettings } from '../types';
 import type { TimelessQuote } from '../data/quotesDatabase';
@@ -12,33 +12,6 @@ const call = async <T,>(url: string, init: RequestInit = {}, fallback = 'Somethi
   if (!res.ok) throw new Error(data.error || `${fallback} (status ${res.status})`);
   return data as T;
 };
-
-export interface MeResponse {
-  brandSettings: UserBrandSettings | null;
-}
-
-export const getMe = () => call<MeResponse>('/api/me', {}, 'Could not load your settings');
-
-export const saveBrandSettings = (settings: UserBrandSettings) =>
-  call<{ brandSettings: UserBrandSettings }>('/api/me/settings', { method: 'PUT', body: JSON.stringify(settings) }, 'Could not save settings');
-
-export const listMyPosts = async () => (await call<{ posts: Post[] }>('/api/me/posts', {}, 'Could not load your posts')).posts;
-
-export const savePost = (post: Omit<Post, 'id'>) =>
-  call<{ post: Post; message: string }>(
-    '/api/me/posts',
-    { method: 'POST', body: JSON.stringify({ post }) },
-    'Could not save your post'
-  );
-
-export const listQuotes = async () => (await call<{ quotes: TimelessQuote[] }>('/api/quotes', {}, 'Could not load quotes')).quotes;
-
-export const getDailyQuote = async () => (await call<{ quote: TimelessQuote }>('/api/quotes/daily', {}, "Could not load today's quote")).quote;
-
-export const listMyPersonas = async () => (await call<{ personas: Persona[] }>('/api/me/personas', {}, 'Could not load personas')).personas;
-
-export const createMyPersona = async (data: { name: string; description: string; promptFragment: string }) =>
-  (await call<{ persona: Persona }>('/api/me/personas', { method: 'POST', body: JSON.stringify(data) }, 'Could not save the persona')).persona;
 
 export const deleteMyData = () => call<{ deleted: boolean }>('/api/me', { method: 'DELETE' }, 'Could not delete your data');
 
