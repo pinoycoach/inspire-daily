@@ -185,13 +185,8 @@ export const PostCard: React.FC<{ post: Post; brandSettings?: UserBrandSettings 
             )}
         </div>
 
-        {/* Engagement Stats and Actions */}
-        <div className="flex flex-wrap items-center justify-between gap-3 border-t border-gray-700 pt-3 text-sm text-gray-400">
-          <div className="flex items-center gap-4">
-            <span>❤️ {post.likes.toLocaleString()}</span>
-            <span>💬 {post.comments.toLocaleString()}</span>
-            <span>🔁 {post.shares.toLocaleString()}</span>
-          </div>
+        {/* Actions. No likes, comments or shares here: those would be made-up numbers. */}
+        <div className="flex flex-wrap items-center justify-end gap-3 border-t border-gray-700 pt-3 text-sm text-gray-400">
 
           {/* Action buttons (excluded from screenshot export) */}
           <div data-no-export="true" className="flex flex-wrap items-center gap-2">

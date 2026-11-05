@@ -14,9 +14,9 @@ export const createPersona = async (personaData: NewPersonaData): Promise<Person
 // --- Gemini Service Functions ---
 
 const generateRandomMetrics = () => ({
-  likes: Math.floor(Math.random() * 100000),
-  comments: Math.floor(Math.random() * 5000),
-  shares: Math.floor(Math.random() * 20000),
+  likes: 0,
+  comments: 0,
+  shares: 0,
 });
 
 function ensureAllCaptionAngles(

@@ -350,7 +350,7 @@ export async function downloadPostGraphic(
       currentY += photoBoxHeight + 35;
     }
 
-    // 4. Footer: Engagement Metrics + Inspire Daily Badge
+    // 4. Footer: the Inspire Daily badge only (no made-up likes, comments or shares)
     const sepY = currentY + 10;
     ctx.strokeStyle = '#334155';
     ctx.lineWidth = 2;
@@ -360,9 +360,6 @@ export async function downloadPostGraphic(
     ctx.stroke();
 
     const statsY = sepY + 45;
-    ctx.font = '500 26px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-    ctx.fillStyle = '#94a3b8';
-    ctx.fillText(`❤️  ${post.likes.toLocaleString()}   💬  ${post.comments.toLocaleString()}   🔁  ${post.shares.toLocaleString()}`, padding, statsY);
 
     if (showWatermark) {
       ctx.fillStyle = '#64748b';
