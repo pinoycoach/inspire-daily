@@ -27,7 +27,7 @@ const __dirname = path.dirname(__filename);
 
 const app = express();
 const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
-app.set("trust proxy", true); // Cloud Run sits behind Google's proxy; this gives the real visitor IP.
+app.set("trust proxy", 1); // Cloud Run sits behind one Google proxy hop; trusting only that hop stops visitors faking their IP.
 app.use(express.json({ limit: "15mb" }));
 
 // ---------- AI mode and models ----------
@@ -137,6 +137,24 @@ const secretMatches = (given: unknown, secret: string) => {
 };
 const passcodeMatches = (given: unknown) => secretMatches(given, APP_PASSCODE);
 
+// Wrong passcodes and curator codes: after MAX_FAILED_CODES misses in 15 minutes, that visitor is locked out
+// until the window passes. Kept in memory, so a restart resets it (enough for a small site).
+const FAILED_WINDOW_MS = 15 * 60 * 1000;
+const MAX_FAILED_CODES = Number(process.env.MAX_FAILED_CODES) || 10;
+const failedCodes = new Map<string, number[]>();
+const recentFails = (ip: string) => (failedCodes.get(ip) || []).filter((t) => Date.now() - t < FAILED_WINDOW_MS);
+const lockedOut = (ip: string) => recentFails(ip).length >= MAX_FAILED_CODES;
+const noteFail = (ip: string) => {
+  const list = recentFails(ip);
+  list.push(Date.now());
+  failedCodes.set(ip, list);
+  if (list.length === MAX_FAILED_CODES) console.warn(`Locked out ${ip} for 15 minutes after ${MAX_FAILED_CODES} wrong codes.`);
+};
+setInterval(() => {
+  for (const [k] of failedCodes) if (!recentFails(k).length) failedCodes.delete(k);
+}, FAILED_WINDOW_MS).unref();
+const TOO_MANY_CODES = { error: "Too many wrong codes. Please wait 15 minutes and try again." };
+
 // ---------- Invite-only beta: Google sign-in + invite codes ----------
 
 // INVITE_ONLY replaces the shared passcode: you sign in with Google and redeem an invite once.
@@ -228,8 +246,16 @@ declare global {
 app.use("/api", (req, res, next) => {
   const p = req.originalUrl.split("?")[0];
   // Media links are signed per file, so <img> tags work without headers.
-  if (OPEN_PATHS.has(p) || p.startsWith("/api/media/")) return next();
+  if (p.startsWith("/api/media/")) return next();
+  // Only requests that carry a code are locked out, so visitors sharing a mobile network's IP still see today's three.
+  if (lockedOut(req.ip || "unknown") && (p === "/api/unlock" || p.startsWith("/api/admin") || req.get("x-app-passcode"))) {
+    return res.status(429).json(TOO_MANY_CODES);
+  }
+  if (OPEN_PATHS.has(p)) return next();
+  const ip = req.ip || "unknown";
   if (!INVITE_ONLY && APP_PASSCODE && !passcodeMatches(req.get("x-app-passcode"))) {
+    // A missing header is a page that hasn't unlocked yet, not a guess.
+    if (req.get("x-app-passcode")) noteFail(ip);
     return res.status(401).json({ error: "Locked. Enter the app passcode." });
   }
   if (!SESSION_FREE.has(p)) {
@@ -256,6 +282,7 @@ app.use("/api", (req, res, next) => {
 
 app.post("/api/unlock", (req, res) => {
   if (!APP_PASSCODE || passcodeMatches(req.body?.passcode)) return res.json({ ok: true });
+  noteFail(req.ip || "unknown");
   setTimeout(() => res.status(401).json({ error: "That passcode isn't right." }), 800);
 });
 
@@ -392,7 +419,10 @@ async function mapLimit<T, R>(items: T[], limit: number, fn: (item: T) => Promis
 
 app.use("/api/admin", (req, res, next) => {
   if (!ADMIN_CODE) return res.status(404).json({ error: "Curating is switched off on this server." });
-  if (!secretMatches(req.get("x-admin-code"), ADMIN_CODE)) return res.status(403).json({ error: "That curator code isn't right." });
+  if (!secretMatches(req.get("x-admin-code"), ADMIN_CODE)) {
+    noteFail(req.ip || "unknown");
+    return res.status(403).json({ error: "That curator code isn't right." });
+  }
   next();
 });
 
